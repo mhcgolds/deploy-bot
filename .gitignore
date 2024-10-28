@@ -1,0 +1,4 @@
+.env
+revisions.log
+commit-number.txt
+node_modules/
