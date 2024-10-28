@@ -20,8 +20,8 @@ const COMMIT_NUMBER_FILE = './commit-number.txt';
 		let messageContent;
 		try {
 			const revisionsContent = await readFile(BOT_REVISION_LOG_PATH, { encoding: 'utf8' });
-			const revisionCurrent = revisionsContent.split("\n").pop();
-			const revisionSegments = revisionCurrent.split(' ');		
+			const revisionCurrent = revisionsContent.split(/\r\n|\r|\n/).slice(-2)[0];
+			const revisionSegments = revisionCurrent.split(' ');
 			const branch = revisionSegments[1];
 			let commit = revisionSegments[3].replace(/[^a-z0-9]/g, '');
 			
