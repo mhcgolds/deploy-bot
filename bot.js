@@ -15,12 +15,13 @@ const COMMIT_NUMBER_FILE = './commit-number.txt';
 			commitNumber = 1;
 		}
 		
-		writeFile(COMMIT_NUMBER_FILE, (commitNumber + 1).toString());
+		writeFile(COMMIT_NUMBER_FILE, (Number(commitNumber) + 1).toString());
 		
 		let messageContent;
 		try {
 			const revisionsContent = await readFile(BOT_REVISION_LOG_PATH, { encoding: 'utf8' });
-			const revisionCurrent = revisionsContent.split(/\r\n|\r|\n/).slice(-2)[0];
+			const latestTwoLines = revisionsContent.split(/\r\n|\r|\n/).slice(-2);
+			const revisionCurrent = ((!latestTwoLines[1] || latestTwoLines[1] === '') ? latestTwoLines[0] : latestTwoLines[1]);
 			const revisionSegments = revisionCurrent.split(' ');
 			const branch = revisionSegments[1];
 			let commit = revisionSegments[3].replace(/[^a-z0-9]/g, '');
