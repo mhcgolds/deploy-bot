@@ -3,19 +3,23 @@ const { readFile, writeFile } = require('node:fs/promises');
 const { Client, GatewayIntentBits } = require('discord.js');
 const { BOT_TOKEN, BOT_CHANNEL_ID, BOT_REVISION_LOG_PATH, BOT_COMMIT_LINK_PATTERN } = process.env;
 const COMMIT_NUMBER_FILE = './commit-number.txt';
+const testMode = process.argv.some(arg => arg === '--test');
 
 (async function() {
 	if (BOT_TOKEN && BOT_CHANNEL_ID && BOT_REVISION_LOG_PATH) {
-		let commitNumber;
 		
-		try {
-			commitNumber = await readFile(COMMIT_NUMBER_FILE, { encoding: 'utf8' } );
+		if (!testMode) {
+			let commitNumber;
+			
+			try {
+				commitNumber = await readFile(COMMIT_NUMBER_FILE, { encoding: 'utf8' } );
+			}
+			catch (e) {
+				commitNumber = 1;
+			}
+			
+			writeFile(COMMIT_NUMBER_FILE, (Number(commitNumber) + 1).toString());
 		}
-		catch (e) {
-			commitNumber = 1;
-		}
-		
-		writeFile(COMMIT_NUMBER_FILE, (Number(commitNumber) + 1).toString());
 		
 		let messageContent;
 		try {
@@ -37,6 +41,11 @@ const COMMIT_NUMBER_FILE = './commit-number.txt';
 		}
 		catch (e) {
 			messageContent = '🔴 Erro ao ler informações do deploy: ' + e.toString();
+		}
+		
+		if (testMode) {
+			console.log(messageContent);
+			return;
 		}
 		
 		const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
