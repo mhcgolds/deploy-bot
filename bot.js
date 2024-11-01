@@ -35,9 +35,9 @@ const testMode = process.argv.some(arg => arg === '--test');
 			}
 			
 			const date = new Date(revisionSegments[7].replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1/$2/$3 $4:$5:$6'));
-			date.setHours(date.getHours() - 3); // Fix timezone
+			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours() - 3).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
 			const user = revisionSegments[9];
-			messageContent = `🟢 Deploy #${commitNumber} executado em ${date.toLocaleString()} por ${user}. ${commit}`;
+			messageContent = `🟢 Deploy #${commitNumber} executado em ${dateDisplay} por ${user}. ${commit}`;
 		}
 		catch (e) {
 			messageContent = '🔴 Erro ao ler informações do deploy: ' + e.toString();
