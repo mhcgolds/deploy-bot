@@ -31,6 +31,7 @@ const COMMIT_NUMBER_FILE = './commit-number.txt';
 			}
 			
 			const date = new Date(revisionSegments[7].replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1/$2/$3 $4:$5:$6'));
+			date.setHours(date.setHours() - 3); // Fix timezone
 			const user = revisionSegments[9];
 			messageContent = `🟢 Deploy #${commitNumber} executado em ${date.toLocaleString()} por ${user}. ${commit}`;
 		}
