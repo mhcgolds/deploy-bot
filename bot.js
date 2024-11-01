@@ -8,9 +8,9 @@ const testMode = process.argv.some(arg => arg === '--test');
 (async function() {
 	if (BOT_TOKEN && BOT_CHANNEL_ID && BOT_REVISION_LOG_PATH) {
 		
-		if (!testMode) {
-			let commitNumber;
+		let commitNumber = '';
 			
+		if (!testMode) {
 			try {
 				commitNumber = await readFile(COMMIT_NUMBER_FILE, { encoding: 'utf8' } );
 			}
