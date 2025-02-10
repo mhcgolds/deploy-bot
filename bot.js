@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { readFile, writeFile } = require('node:fs/promises');
 const { Client, GatewayIntentBits } = require('discord.js');
-const { BOT_TOKEN, BOT_CHANNEL_ID, BOT_REVISION_LOG_PATH, BOT_COMMIT_LINK_PATTERN } = process.env;
+const { BOT_TOKEN, BOT_CHANNEL_ID, BOT_COMMIT_LINK_PATTERN } = process.env;
 const testMode = process.argv.some(arg => arg === '--test');
 const envArgIndex = process.argv.indexOf('--env');
 let commitNumberFile = './commit-number.txt';
@@ -13,9 +13,15 @@ if (envArgIndex > -1) {
 	envDescription = ` no ambiente de ${envName}`;
 }
 
+const revArgIndex = process.argv.indexOf('--rev-path');
+let revisionFilePath = null;
+
+if (revArgIndex > -1) {
+	revisionFilePath = process.argv[revArgIndex + 1] + '/revisions.log';
+}
+
 (async function() {
-	if (BOT_TOKEN && BOT_CHANNEL_ID && BOT_REVISION_LOG_PATH) {
-		
+	if (BOT_TOKEN && BOT_CHANNEL_ID) {
 		let commitNumber = '';
 			
 		try {
@@ -31,7 +37,7 @@ if (envArgIndex > -1) {
 		
 		let messageContent;
 		try {
-			const revisionsContent = await readFile(BOT_REVISION_LOG_PATH, { encoding: 'utf8' });
+			const revisionsContent = await readFile(revisionFilePath, { encoding: 'utf8' });
 			const latestTwoLines = revisionsContent.split(/\r\n|\r|\n/).slice(-2);
 			const revisionCurrent = ((!latestTwoLines[1] || latestTwoLines[1] === '') ? latestTwoLines[0] : latestTwoLines[1]);
 			const revisionSegments = revisionCurrent.split(' ');
