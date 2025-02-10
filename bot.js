@@ -4,12 +4,12 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { BOT_TOKEN, BOT_CHANNEL_ID, BOT_REVISION_LOG_PATH, BOT_COMMIT_LINK_PATTERN } = process.env;
 const testMode = process.argv.some(arg => arg === '--test');
 const envArgIndex = process.argv.indexOf('--env');
-let commitNumbeFile = './commit-number.txt';
+let commitNumberFile = './commit-number.txt';
 let envDescription = '';
 
 if (envArgIndex > -1) {
 	let envName = process.argv[envArgIndex + 1];
-	commitNumbeFile = commitNumbeFile.replace('.txt', `-${envName}.txt`);
+	commitNumberFile = `./commit-number-${envName}.txt`;
 	envDescription = ` no ambiente de ${envName}`;
 }
 
@@ -19,14 +19,14 @@ if (envArgIndex > -1) {
 		let commitNumber = '';
 			
 		try {
-			commitNumber = await readFile(commitNumbeFile, { encoding: 'utf8' } );
+			commitNumber = await readFile(commitNumberFile, { encoding: 'utf8' } );
 		}
 		catch (e) {
 			commitNumber = 1;
 		}
 		
 		if (!testMode) {
-			writeFile(commitNumbeFile);
+            writeFile(commitNumberFile, (Number(commitNumber) + 1).toString());
 		}
 		
 		let messageContent;
