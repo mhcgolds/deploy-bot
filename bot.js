@@ -2,23 +2,31 @@ require('dotenv').config();
 const { readFile, writeFile } = require('node:fs/promises');
 const { Client, GatewayIntentBits } = require('discord.js');
 const { BOT_TOKEN, BOT_CHANNEL_ID, BOT_REVISION_LOG_PATH, BOT_COMMIT_LINK_PATTERN } = process.env;
-const COMMIT_NUMBER_FILE = './commit-number.txt';
 const testMode = process.argv.some(arg => arg === '--test');
+const envArgIndex = process.argv.indexOf('--env');
+let commitNumbeFile = './commit-number.txt';
+let envDescription = '';
+
+if (envArgIndex > -1) {
+	let envName = process.argv[envArgIndex + 1];
+	commitNumbeFile = commitNumbeFile.replace('.txt', `-${envName}.txt`);
+	envDescription = ` no ambiente de ${envName}`;
+}
 
 (async function() {
 	if (BOT_TOKEN && BOT_CHANNEL_ID && BOT_REVISION_LOG_PATH) {
 		
 		let commitNumber = '';
 			
+		try {
+			commitNumber = await readFile(commitNumbeFile, { encoding: 'utf8' } );
+		}
+		catch (e) {
+			commitNumber = 1;
+		}
+		
 		if (!testMode) {
-			try {
-				commitNumber = await readFile(COMMIT_NUMBER_FILE, { encoding: 'utf8' } );
-			}
-			catch (e) {
-				commitNumber = 1;
-			}
-			
-			writeFile(COMMIT_NUMBER_FILE, (Number(commitNumber) + 1).toString());
+			writeFile(commitNumbeFile);
 		}
 		
 		let messageContent;
@@ -35,12 +43,14 @@ const testMode = process.argv.some(arg => arg === '--test');
 			}
 			
 			const date = new Date(revisionSegments[7].replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1/$2/$3 $4:$5:$6'));
-			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours() - 3).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours() - 4).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
 			const user = revisionSegments[9];
-			messageContent = `🟢 Deploy #${commitNumber} executado em ${dateDisplay} por ${user}. ${commit}`;
+			messageContent = `🟢 Deploy #${commitNumber} executado com sucesso${envDescription} em ${dateDisplay} por ${user}. [Commit](${commit}).`;
 		}
 		catch (e) {
-			messageContent = '🔴 Erro ao ler informações do deploy: ' + e.toString();
+			const date = new Date();
+			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours()).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+			messageContent = `🔴 Deploy #${commitNumber} executado com falha${envDescription} em ${dateDisplay}. Exception: ` + e.toString();
 		}
 		
 		if (testMode) {
