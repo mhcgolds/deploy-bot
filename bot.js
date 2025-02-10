@@ -45,7 +45,7 @@ if (envArgIndex > -1) {
 			const date = new Date(revisionSegments[7].replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1/$2/$3 $4:$5:$6'));
 			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours() - 4).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
 			const user = revisionSegments[9];
-			messageContent = `🟢 Deploy #${commitNumber} executado com sucesso${envDescription} em ${dateDisplay} por ${user}. [Commit](${commit}).`;
+			messageContent = `🟢 Deploy #${commitNumber} executado com sucesso${envDescription} em ${dateDisplay} por ${user}. Branch: ${branch}, commit: [${commit.replace(/^.+\//, '').substring(0, 7)}](${commit}).`;
 		}
 		catch (e) {
 			const date = new Date();
