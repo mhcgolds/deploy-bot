@@ -68,7 +68,7 @@ if (revArgIndex > -1) {
 		
 		const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
-		client.once('ready', () => {		
+		client.once('ready', async () => {		
 			const channel = client.channels.fetch(BOT_CHANNEL_ID);
 			const message = channel.messages.fetch(data.messageId);
 			
