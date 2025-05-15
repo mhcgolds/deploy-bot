@@ -4,12 +4,12 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { BOT_TOKEN, BOT_CHANNEL_ID, BOT_COMMIT_LINK_PATTERN } = process.env;
 const testMode = process.argv.some(arg => arg === '--test');
 const envArgIndex = process.argv.indexOf('--env');
-let commitNumberFile = './commit-number.txt';
+let commitNumberFile = './data.json';
 let envDescription = '';
 
 if (envArgIndex > -1) {
 	let envName = process.argv[envArgIndex + 1];
-	commitNumberFile = `./commit-number-${envName}.txt`;
+	commitNumberFile = `./data-${envName}.json`;
 	envDescription = ` no ambiente de ${envName}`;
 }
 
@@ -22,17 +22,19 @@ if (revArgIndex > -1) {
 
 (async function() {
 	if (BOT_TOKEN && BOT_CHANNEL_ID) {
-		let commitNumber = '';
+		let data = {};
 			
 		try {
-			commitNumber = await readFile(commitNumberFile, { encoding: 'utf8' } );
+			data = await readFile(commitNumberFile, { encoding: 'utf8' } );
+			data = JSON.parse(data);
+			data.commitNumber = data.commitNumber + 1;
 		}
 		catch (e) {
-			commitNumber = 1;
+			data.commitNumber = 0;
 		}
 		
 		if (!testMode) {
-            writeFile(commitNumberFile, (Number(commitNumber) + 1).toString());
+            await writeFile(commitNumberFile, JSON.stringify(data));
 		}
 		
 		let messageContent;
@@ -51,12 +53,12 @@ if (revArgIndex > -1) {
 			const date = new Date(revisionSegments[7].replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1/$2/$3 $4:$5:$6'));
 			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours() - 3).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
 			const user = revisionSegments[9];
-			messageContent = `🟢 Deploy #${commitNumber} executado com sucesso${envDescription} em ${dateDisplay} por ${user}. Branch: ${branch}, commit: [${commit.replace(/^.+\//, '').substring(0, 7)}](${commit}).`;
+			messageContent = `🟢 Deploy #${data.commitNumber} executado com sucesso${envDescription} em ${dateDisplay} por ${user}. Branch: ${branch}, commit: [${commit.replace(/^.+\//, '').substring(0, 7)}](${commit}).`;
 		}
 		catch (e) {
 			const date = new Date();
 			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours()).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
-			messageContent = `🔴 Deploy #${commitNumber} executado com falha${envDescription} em ${dateDisplay}. Exception: ` + e.toString();
+			messageContent = `🔴 Deploy #${data.commitNumber} executado com falha${envDescription} em ${dateDisplay}. Exception: ` + e.toString();
 		}
 		
 		if (testMode) {
@@ -67,11 +69,14 @@ if (revArgIndex > -1) {
 		const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
 		client.once('ready', () => {		
-			const channel = client.channels.cache.get(BOT_CHANNEL_ID);
-			if (channel) {
-				channel.send(messageContent);
+			const channel = client.channels.fetch(BOT_CHANNEL_ID);
+			const message = channel.messages.fetch(data.messageId);
+			
+			if (channel && message) {
+				await message.edit(messageContent);
 				
 				setTimeout(() => {
+					client.destroy();
 					process.exit();
 				}, 100);
 			}
