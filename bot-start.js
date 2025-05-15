@@ -34,7 +34,7 @@ if (revArgIndex > -1) {
 		catch (e) {
 		}
 		
-		let messageContent = `🟡 Deploy #${commitNumber} iniciado${envDescription}.`;
+		let messageContent = `🟡 Deploy #${data.commitNumber} iniciado${envDescription}.`;
 		
 		if (testMode) {
 			console.log(messageContent);
