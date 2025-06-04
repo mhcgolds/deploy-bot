@@ -4,12 +4,11 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { BOT_TOKEN, BOT_CHANNEL_ID, BOT_COMMIT_LINK_PATTERN } = process.env;
 const testMode = process.argv.some(arg => arg === '--test');
 const envArgIndex = process.argv.indexOf('--env');
-let commitNumberFile = './data.json';
+const dataFile = './data.json';
 let envDescription = '';
 
 if (envArgIndex > -1) {
 	let envName = process.argv[envArgIndex + 1];
-	commitNumberFile = `./data-${envName}.json`;
 	envDescription = ` no ambiente de ${envName}`;
 }
 
@@ -23,18 +22,12 @@ if (revArgIndex > -1) {
 (async function() {
 	if (BOT_TOKEN && BOT_CHANNEL_ID) {
 		let data = {};
-			
+		
 		try {
-			data = await readFile(commitNumberFile, { encoding: 'utf8' } );
+			data = await readFile(dataFile, { encoding: 'utf8' } );
 			data = JSON.parse(data);
-			data.commitNumber = data.commitNumber + 1;
 		}
 		catch (e) {
-			data.commitNumber = 0;
-		}
-		
-		if (!testMode) {
-            await writeFile(commitNumberFile, JSON.stringify(data));
 		}
 		
 		let messageContent;
@@ -50,15 +43,11 @@ if (revArgIndex > -1) {
 				commit = BOT_COMMIT_LINK_PATTERN.replace(/\{commit\}/g, revisionSegments[3].replace(/[^a-z0-9]/g, ''));
 			}
 			
-			const date = new Date(revisionSegments[7].replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1/$2/$3 $4:$5:$6'));
-			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours() - 3).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
 			const user = revisionSegments[9];
-			messageContent = `🟢 Deploy #${data.commitNumber} executado com sucesso${envDescription} em ${dateDisplay} por ${user}. Branch: ${branch}, commit: [${commit.replace(/^.+\//, '').substring(0, 7)}](${commit}).`;
+			messageContent = `🟢 Deploy executado com sucesso${envDescription} por ${user}. Branch: ${branch}. Commit: [${commit.replace(/^.+\//, '').substring(0, 7)}](${commit}).`;
 		}
 		catch (e) {
-			const date = new Date();
-			const dateDisplay = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} às ${(date.getHours()).toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
-			messageContent = `🔴 Deploy #${data.commitNumber} executado com falha${envDescription} em ${dateDisplay}. Exception: ` + e.toString();
+			messageContent = `🔴 Deploy executado com erro${envDescription}. Exception: ` + e.toString();
 		}
 		
 		if (testMode) {
@@ -68,7 +57,7 @@ if (revArgIndex > -1) {
 		
 		const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
-		client.once('ready', async () => {		
+		client.once('ready', async () => {
 			const channel = await client.channels.fetch(BOT_CHANNEL_ID);
 			const message = await channel.messages.fetch(data.messageId);
 			
@@ -85,6 +74,6 @@ if (revArgIndex > -1) {
 		client.login(BOT_TOKEN);
 	}
 	else {
-		console.log('Env params BOT_TOKEN, BOT_CHANNEL_ID or BOT_REVISION_LOG_PATH are not defined!');
+		console.log('Env params BOT_TOKEN or BOT_CHANNEL_ID are not defined!');
 	}
 })();

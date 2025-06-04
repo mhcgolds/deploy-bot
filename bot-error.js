@@ -16,24 +16,28 @@ if (envArgIndex > -1) {
 	if (BOT_TOKEN && BOT_CHANNEL_ID) {
 		let data = {};
 		
-		let messageContent = `🟡 Deploy iniciado${envDescription}.`;
+		let messageContent = `🔴 Deploy executado com erro${envDescription}.`;
 		
 		if (testMode) {
 			console.log(messageContent);
 			return;
 		}
 		
+		try {
+			data = await readFile(dataFile, { encoding: 'utf8' } );
+			data = JSON.parse(data);
+		}
+		catch (e) {
+		}
+		
 		const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 
-		client.once('ready', async () => {		
+		client.once('ready', async () => {
 			const channel = await client.channels.fetch(BOT_CHANNEL_ID);
-			if (channel) {
-				const messageData = await channel.send(messageContent);
-				
-				if (!testMode) {
-					data.messageId = messageData.id;
-					await writeFile(dataFile, JSON.stringify(data));
-				}
+			const message = await channel.messages.fetch(data.messageId);
+			
+			if (channel && message) {
+				await message.edit(messageContent);
 				
 				setTimeout(() => {
 					client.destroy();
